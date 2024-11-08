@@ -8,6 +8,7 @@ public class CRUDCalculadora
     private static final String USER = "root";
     private static final String PASSWORD = "root";
 
+
     public static Connection getConnection() throws SQLException
     {
         try{
@@ -40,12 +41,45 @@ public class CRUDCalculadora
         }
     }
 
+    public static Operaciones funcionPost(String operacion) throws SQLException{
+        String consulta = "INSERT INTO Operaciones (Operacion) VALUES (?);";
+        try(
+                Connection connection = getConnection();
+                PreparedStatement stmt = connection.prepareStatement(consulta, Statement.RETURN_GENERATED_KEYS);//Generar claves autoincrementadas
+                ) {
+            stmt.setString(1,operacion);
+            int clumnasAfectas = stmt.executeUpdate();
+            if (clumnasAfectas > 0){
+               try(ResultSet registroOperaciones = stmt.getGeneratedKeys()){ //Si se autogenera una clave guarda la instancia en registroOperaciones(tupla entera)
+                    if(registroOperaciones.next()){
+                        int idGenerado = registroOperaciones.getInt(1);
+                        return new Operaciones(idGenerado,operacion);
+                    }else{
+                        System.out.println("Ha fallado al leer");
+                        return null;
+                    }
+               }
+            }else{
+                System.out.println("Ha fallado ya que no hay filas afectadas");
+                return null;
+            }
 
+        }catch (Exception error){
+            throw error;
+        }
+
+    }
 
     public static void main(String[] args) throws SQLException {
         getConnection();
         List<Operaciones> listaPrueba = new ArrayList<>();
         listaPrueba = funcionGet();
+        for(Operaciones operacion:listaPrueba){
+
+            System.out.println(operacion.toString());
+
+        }
+        listaPrueba.add(funcionPost("3+3"));
         for(Operaciones operacion:listaPrueba){
 
             System.out.println(operacion.toString());
